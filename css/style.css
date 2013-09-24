@@ -1,5 +1,4 @@
 /* Jquery mobile overrides */
-.ui-panel-display-overlay {z-index: 999;}
 .ui-panel.ui-panel-open {
         position:fixed;
     }
@@ -12,6 +11,12 @@
     bottom: 0px;
     overflow: scroll;
     -webkit-overflow-scrolling: touch;
+}
+
+.ui-panel-display-push {
+  -webkit-box-shadow: 5px 0 5px rgba(0,0,0,.15);
+  -moz-box-shadow: 5px 0 5px rgba(0,0,0,.15);
+  box-shadow: 5px 0 5px rgba(0,0,0,.15);
 }
 
 
@@ -28,7 +33,7 @@ h2 {
 
 
 #menu_container {
-  margin-top:2.75em;
+  /*margin-top:2.75em;*/
 }
 
 
@@ -72,8 +77,8 @@ h2 {
 }
 
 #footer {
-  top: 680px;
-  right: 140px;
+  top: 80%;
+  right: 70px;
   text-align: right;
 }
 

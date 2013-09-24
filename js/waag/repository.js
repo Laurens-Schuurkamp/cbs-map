@@ -7,11 +7,12 @@ var dataLayers=[];
 WAAG.Repository = function Repository() {
 
 var apiUrl="http://api.citysdk.waag.org/";
-var maxEntrys=500;
+var maxEntrys=1000;
 var load_queue=[];
 
 var llAmsterdam={city:"amsterdam", admr:"admr.nl.amsterdam", lat:52.3734, lng:4.8921};
-//var llAmsterdam={city:"amsterdam", admr:"admr.nl.nederland", lat:52.3734, lng:4.8921};
+var llNederland={city:"nederland", admr:"admr.nl.nederland", lat:52.3734, lng:4.8921};
+var llUtrecht={city:"utrecht", admr:"admr.nl.utrecht", lat:52.3734, lng:4.8921};
 var dummyMax=1000;
   
   console.log("repository constructor innited");
@@ -67,36 +68,26 @@ var dummyMax=1000;
      var dataLayer={
     			label:"main_geo_map",
     			layers:[
-    				{label:"Amsterdam", subs:[], ll:llAmsterdam, apiCall:llAmsterdam.admr+"/regions?admr::admn_level=5&geom", geom:"regions", layer:"main_geo_map", properties:{active:true, geoscaling:false, static:false, dotSize:0, stroke_width:0.25}},
+    				{label:"Amsterdam", subs:[], ll:llAmsterdam, apiCall:llNederland.admr+"/regions?admr::admn_level=3&geom", geom:"regions", layer:"main_geo_map", properties:{active:true, geoscaling:false, static:false, dotSize:0, stroke_width:0.25}},
     			]
     		};
 
-  	//dataLayers.push(dataLayer);
+  	dataLayers.push(dataLayer);
 		
 				
   	dataLayer={
   			label:"cbs",
   			layers:[
   				{label:"Amsterdam", subs:cbsLayers, ll:llAmsterdam, apiCall:llAmsterdam.admr+"/regions?admr::admn_level=5&layer=cbs&geom", geom:"regions", layer:"cbs", properties:{active:true, geoscaling:false, static:false, dotSize:0, stroke_width:0.25}},
-  			  {label:"Amsterdam", subs:[], ll:llAmsterdam, apiCall:llAmsterdam.admr+"/nodes?layer=311.amsterdam&geom", geom:"custom_label", layer:"service_requests", properties:{active:false, geoscaling:false, static:false, dotSize:0, stroke_width:0.25}},
+  				//{label:"Nederland", subs:cbsLayers, ll:llNederland, apiCall:llNederland.admr+"/regions?admr::admn_level=3&layer=cbs&geom", geom:"regions", layer:"cbs", properties:{active:true, geoscaling:false, static:false, dotSize:0, stroke_width:0.25}},
+  				//{label:"utrecht", subs:cbsLayers, ll:llUtrecht, apiCall:llUtrecht.admr+"/regions?admr::admn_level=3&layer=cbs&geom", geom:"regions", layer:"cbs", properties:{active:true, geoscaling:false, static:false, dotSize:0, stroke_width:0.25}},
+
   			]
   		};
 
     dataLayers.push(dataLayer);
 	
-    dataLayer={
-       label:"divv",
-       layers:[
-         {label:"Amsterdam", subs:[], ll:llAmsterdam, apiCall:"routes?layer=divv.traffic&geom", geom:"lines", layer:"divv_traffic", properties:{active:true, geoscaling:false, static:false, dotSize:0, stroke_width:0.25}},
-         {label:"Amsterdam", subs:[], ll:llAmsterdam, apiCall:"nodes?layer=divv.taxi&geom", geom:"points", layer:"divv_taxi", properties:{active:true, geoscaling:false, static:false, dotSize:0, stroke_width:0.25}},
-         {label:"Amsterdam", subs:[], ll:llAmsterdam, apiCall:"nodes?layer=divv.parking.tarieven&geom", geom:"regions", layer:"divv_parking_tarieven", properties:{active:true, geoscaling:false, static:false, dotSize:0, stroke_width:0.25}},
-         {label:"Amsterdam", subs:[], ll:llAmsterdam, apiCall:"nodes?layer=divv.parking.tarieven_uitz&geom", geom:"regions", layer:"divv_parking_tarieven_uitz", properties:{active:true, geoscaling:false, static:false, dotSize:0, stroke_width:0.25}},
-         //{label:"Amsterdam", subs:[], ll:llAmsterdam, apiCall:"nodes?layer=divv.parking.ticketmachines&geom", geom:"points", layer:"divv_parking_ticketmachines", properties:{active=true, geoscaling:false, static:false, dotSize:0, stroke_width:0.25}},
 
-       ]
-     };
-
-   	dataLayers.push(dataLayer);
    	
    	for(var i=0; i<dataLayers.length; i++){
         for(var j=0; j<dataLayers[i].layers.length; j++){

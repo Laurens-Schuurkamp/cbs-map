@@ -63,6 +63,7 @@ WAAG.Menu = function Menu(container) {
                   if(dataLayers[i].label=="cbs"){
                     dataLayers[i].layers[0].activeLayer=d.value;
                     geoMap.updateRegionsMap(dataLayers[i].layers[0]);
+                    geoMap.updateBarChart(dataLayers[i].layers[0]);
                   }
               }
 
@@ -98,6 +99,7 @@ WAAG.Menu = function Menu(container) {
     	      for(var j=0; j<dataLayers[i].layers.length; j++){
     	        var id=dataLayers[i].layers[j].layer;
     	        d3.selectAll("#"+id).attr("class", this.value);
+    	        d3.selectAll("#barChart").attr("class", this.value);
     	      }
     	  }
   	    

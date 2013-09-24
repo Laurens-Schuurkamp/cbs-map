@@ -1,8 +1,10 @@
 function setMaxValue(value){
 
+
 }
 
-function setVisValues(data){
+function setValues(data){
+  
 
 }
 

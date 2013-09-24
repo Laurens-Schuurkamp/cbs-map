@@ -32,7 +32,7 @@
 				
     <div data-role="page">
 	
-			<div data-role="panel" id="menu-panel" class="main_nav" data-display="overlay"  data-dismissible="true" data-theme="a">
+			<div data-role="panel" id="menu-panel" class="main_nav" data-display="push"  data-dismissible="true" data-theme="a">
 				<div class="nav_profile">
 	      	<div class="nav_name">
 						<div id="menu_container">
@@ -45,37 +45,14 @@
 									<label for="checkbox_scaling_cbs">geometry scaling</label>
 									<hr>
 								</div>
-								<div id="main_item">
-										<form>
-										    <label for="flip"><h4>City service requests</h4></label>
-										    <select type="slider" class="flipSliders" name="service_requests" id="flip" title="customMap" data-role="slider" data-mini="true">
-										        <option value="off">Off</option>
-										        <option value="on">On</option>
-										    </select>
-										</form>
-									<hr>
-								</div>
-								<div id="main_item">
-										<form>
-										    <label for="flip"><h4>DIVV</h4></label>
-										    <select type="slider" class="flipSliders" name="divv_taxi" id="flip" title="pointMap" data-role="slider" data-mini="true">
-										        <option value="off">Off</option>
-										        <option value="on">On</option>
-										    </select>
-										</form>
-										<input type="checkbox" name="divv_taxi" id="checkbox_divv_taxi" class="custom" data-mini="true" />
-										<label for="checkbox_divv_taxi">Update DIVV</label>	
-									<hr>
-								</div>
-
 						</div>
 	        </div><!--/nav_name-->
 	      </div><!--/nav_profile-->
 	    </div><!-- /panel -->
  
-      <div data-role="header" data-position="fixed" data-fullscreen="true" data-theme="a">
+      <!-- <div data-role="header" data-position="fixed" data-fullscreen="true" data-theme="a">
       	<h1>City Dashboard</h1>
-				<a href="#menu-panel" data-icon="bars" data-iconpos="notext" class="ui-btn-left">menu</a>
+				<a href="#menu-panel" data-icon="bars" data-iconpos="notext" class="ui-btn-right">menu</a>
        </div><!-- /header -->
  
         <div data-role="content">
@@ -104,8 +81,11 @@
 						            <option value="Reds">Reds</option>
 						            <option value="Greys">Greys</option>
 						          </optgroup>
-						        </select></div>
+						        </select>
+										<a href="#menu-panel" style="margin-top:-10px;" data-role="button" data-icon="gear" data-iconpos="notext" data-theme="c" data-inline="true">Gear</a>
+									</div>
 						   </div>
+						
         </div><!-- /content --> 
 
     </div><!-- /page -->
