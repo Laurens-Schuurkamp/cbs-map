@@ -160,23 +160,22 @@ var dataLayers=[];
           geoMap.preProcesData(dataLayer);
         }
         
-        
       }
 
   	});
 
   }
   
-  getCbsData = function(cdk_id){
+  getCbsData = function(cdk_id, label, level){
     for(var i=0; i<dataLayers.length; i++){
       if(dataLayers[i].cdk_id==cdk_id){
         //geoMap.renewMap(dataLayers[i]);
-        geoMap.preProcesData(dataLayers[i]);
+        geoMap.updateDataSet(dataLayers[i]);
         return;
       }  
     }    
-    var url=apiUrl+cdk_id+"/regions?admr::admn_level=5&layer=cbs&geom&per_page="+maxEntrys+"&page=1";
-    var layer={cdk_id:cdk_id, apiCall:"/regions?admr::admn_level=5&layer=cbs&geom", geom:"regions", layer:"cbs"}
+    var url=apiUrl+cdk_id+"/regions?admr::admn_level="+level+"&layer=cbs&geom&per_page="+maxEntrys+"&page=1";
+    var layer={cdk_id:cdk_id, apiCall:"/regions?admr::admn_level="+level+"&layer=cbs&geom", geom:"regions", layer:"cbs", label:label}
     dataLayers.push(layer);
     getApiData(layer);
 

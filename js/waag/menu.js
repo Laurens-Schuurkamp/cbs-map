@@ -89,7 +89,8 @@ WAAG.Menu = function Menu(container) {
                   
                 })
           .on("click", function(d){
-              geoMap.updateDataSet(dataLayers[0].layers[0], d.value);
+              console.log("updating cbs layer "+d.value);
+              geoMap.setActiveLayer(d.value);
 
     		});
 
@@ -119,6 +120,7 @@ WAAG.Menu = function Menu(container) {
   	d3.selectAll("#selector").on("change", function() {
   	  console.log("on change selector name ="+this.name);
   	  if(this.name=="colorBrewer"){
+  	    d3.selectAll("#main_map").attr("class", this.value);
   	    d3.selectAll("#cbs").attr("class", this.value);
         d3.selectAll("#barChart").attr("class", this.value);
         d3.selectAll("#legenda").attr("class", this.value);
@@ -138,10 +140,11 @@ WAAG.Menu = function Menu(container) {
       //console.log("on change input check ="+this.checked);
       
       if(this.name=="geoScaling"){
+        geoMap.updateGeoScaling( this.checked);
+        
         //dataLayers[i].layers[j].properties.geoscaling=this.checked;
         //geoMap.updateRegionsMap( dataLayers[i].layers[j]);
-        
-        
+
       }
 
         console.log("checkbox "+this.name);

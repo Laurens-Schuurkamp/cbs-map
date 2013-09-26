@@ -62,12 +62,7 @@ WAAG.GeoMap = function GeoMap(container) {
 		    .attr("height", hMap)
 		    .style("fill", "white")
 		    .call(zoom);
-
-		svg.append("rect")
-		    .attr("class", "background")
-		    .attr("width", wMap)
-		    .attr("height", hMap)
-		    
+		    		    
 		map = svg.append("g")
 		   .attr("id", "map");
 		   
@@ -171,7 +166,8 @@ WAAG.GeoMap = function GeoMap(container) {
 	  if(dataLayer.layer=="main_map"){
 	    createMainMap(dataLayer);
 	  }else{
-	    updateDataSet(dataLayer, activeLayer);
+	    activeDataLayer=dataLayer;
+	    updateDataSet(dataLayer);
 	    console.log("updating data set "+dataLayer.cdk_id);  
 	  }
     
@@ -191,12 +187,13 @@ WAAG.GeoMap = function GeoMap(container) {
     			.enter().append("path")
     			  .attr("id", function(d, i){return d.cdk_id;})
     			  .attr("d", path)
-    			  .style("fill", colorFill)
-    			  .style("stroke", "#333333")
-    			  .style("stroke-width", 0.01+"px")
-    			  .on("mouseover", function(d){ 
-      				d3.select(this).style("fill", "#cccccc" );
-      				d3.select(this).style("stroke-width", 0.25+"px" );
+    			  //.style("fill", "#fff")
+    			  .style("stroke", "#000")
+    			  .style("stroke-width", 0.5+"px")
+    			  .on("mouseover", function(d){
+    			    d3.select(this).attr("class", "q1-9")  
+      				//d3.select(this).style("fill", colorFill );
+      				d3.select(this).style("stroke-width", 1+"px" );
       				var tipsy = $(this).tipsy({ 
       						gravity: 'w', 
       						html: true,
@@ -210,28 +207,32 @@ WAAG.GeoMap = function GeoMap(container) {
 
       			})
       			.on("mouseout", function(d){
-      			  d3.select(this).style("fill", colorFill );
-      			  d3.select(this).style("stroke-width", 0.1+"px" );
+      			  d3.select(this).attr("class", "q-white")
+      			  //d3.select(this).style("fill", "#fff" );
+      			  d3.select(this).style("stroke-width", 0.5+"px" );
       			})
     			  .on("click", function(d){
-    			    repository.getCbsData(d.cdk_id);
+    			    repository.getCbsData(d.cdk_id, d.name, 5);
     			        			    
       			})
       	
         var initMenu = menu.createMenuItems(dataLayer);
-        menu.updateListView(dataLayer);		
+        menu.updateListView(activeLayer);		
     		console.log("main map innited");
     		arrangeZindex();
 
-      repository.getCbsData("admr.nl.amsterdam");
+      repository.getCbsData("admr.nl.amsterdam", "Amsterdam", 5);
       
 
   };
   
   var max, colorScale, quantizeBrewer, scalingGeoGeo;
-  updateDataSet = function (dataLayer, cbsLayer){
+  updateDataSet = function (dataLayer){
     
-    activeLayer=cbsLayer;
+    if(activeDataLayer.cdk_id!=dataLayer.cdk_id){
+      activeDataLayer=dataLayer;
+    }    
+  	
   	var data=dataLayer.data;
     
     data.forEach(function(d){
@@ -254,7 +255,7 @@ WAAG.GeoMap = function GeoMap(container) {
    updateRegionsMap = function (dataLayer){
       
    var data=dataLayer.data;
-    
+    //dataLayer.data.sort(function(a, b) { return d3.ascending(a.subData[activeLayer], b.subData[activeLayer])});
     menu.updateListIcons(activeLayer);
          
     var visCBS=d3.select("#"+dataLayer.layer);
@@ -284,10 +285,26 @@ WAAG.GeoMap = function GeoMap(container) {
            .on("mouseout", function(d){
              d3.select(this).style("stroke-width", 0.1+"px" );
            })
-           
+      
+      vis.attr("class", function(d) { return "q" + quantizeBrewer([d.subData[activeLayer]]) + "-9"; }) //colorBrewer   
+         
       vis.transition()
           .duration(tTime)
-          .style("opacity", 1 );
+          .attr("transform", function(d) {
+                var x = d.centroid[0];
+                var y = d.centroid[1];
+                //d.bounds = path.bounds(d);
+                var s;         
+                if(geoScaling==false){
+                  s=1;
+                }else{
+                  s=scalingGeo([d.subData[activeLayer]]);
+                }    
+                return "translate(" + x + "," + y + ")"
+                    + "scale(" + s + ")"
+                    + "translate(" + -x + "," + -y + ")";
+          })
+          
            
        vis.exit().transition()
            .duration(tTime)
@@ -295,9 +312,34 @@ WAAG.GeoMap = function GeoMap(container) {
           .remove();   
         
   };
-	
-	
-	var mTop=40, mBottom=20, mLeft=5, mRight=40, barWidth=240, legendaWidth=5;
+  
+  updateGeoScaling = function (value){
+    geoScaling=value;
+    var data = activeDataLayer.data;
+    var visCBS=d3.select("#cbs");
+    var vis=visCBS.selectAll("path").data(data, function(d, i){return d.cdk_id});
+    
+    vis.transition()
+        .duration(tTime/2)
+        .attr("transform", function(d) {
+              var x = d.centroid[0];
+              var y = d.centroid[1];
+              //d.bounds = path.bounds(d);
+              var s;         
+              if(geoScaling==false){
+                s=1;
+              }else{
+                s=scalingGeo([d.subData[activeLayer]]);
+              }    
+              return "translate(" + x + "," + y + ")"
+                  + "scale(" + s + ")"
+                  + "translate(" + -x + "," + -y + ")";
+        })
+    
+    
+  }
+  
+	var mTop=40, mBottom=20, mLeft=5, mRight=40, barWidth=240, legendaWidth=10;
 	function updateBarChart(dataLayer){
 	  
   	var data=dataLayer.data;
@@ -307,16 +349,18 @@ WAAG.GeoMap = function GeoMap(container) {
        dataLayer.legenda[i]=0;
     };
 
-  	
-  	
   	var visHeigth = ( window.innerHeight - mTop - mBottom );
   	var yPadding= visHeigth /data.length;
   	var barHeight= visHeigth /data.length;
-  	if(barHeight>1)barHeight=1;
+  	if(barHeight>2)barHeight=1;
   	
   	var barsX=mLeft+legendaWidth;
+  	
+  	
+  	
   
     var visBars=d3.select("#barChart");
+        
     var vis=visBars.selectAll("rect").data(data, function(d, i){return d.cdk_id})
     
     vis.enter().append("rect")
@@ -345,7 +389,7 @@ WAAG.GeoMap = function GeoMap(container) {
 
  			})
  			.on("mouseout", function(d){
- 			  d3.select(this).style("stroke-width", 0.1+"px" );
+ 			  d3.select(this).style("stroke-width", 0.25+"px" );
  			})
  			
  			vis.transition()
@@ -380,8 +424,7 @@ WAAG.GeoMap = function GeoMap(container) {
              return y;
              })
            .attr("height", function(d){return d.value*yPadding});
-     
-            
+      
 	}
 		
 	function arrangeZindex(){
@@ -403,13 +446,20 @@ WAAG.GeoMap = function GeoMap(container) {
 	    //console.log(d3.event);
       map.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
   };
+  
+  setActiveLayer = function(_activeLayer){
+    activeLayer=_activeLayer;
+    updateDataSet(activeDataLayer);
+  }
+  
+  
 
   init();
   this.updateRegionsMap=updateRegionsMap;
   this.preProcesData=preProcesData;
   this.updateDataSet=updateDataSet;
-  //this.renewMap=renewMap;
-  
+  this.setActiveLayer=setActiveLayer;
+  this.updateGeoScaling=updateGeoScaling;
   
   return this;   
 
