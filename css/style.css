@@ -45,6 +45,12 @@ h2 {
 	left:0px;
 
 }
+#menu_btn {
+	position:absolute;
+	top:20px;
+	right:10px;
+
+}
 
 
 #line hr{
@@ -77,7 +83,7 @@ h2 {
 }
 
 #footer {
-  top: 80%;
+  top: 60%;
   right: 70px;
   text-align: right;
 }

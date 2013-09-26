@@ -1,3 +1,35 @@
+var cbsLayers=[
+            {value:"opp_tot", description:"Oppervlaktes"},
+            {value:"aant_inw", description:"Aantal inwoners"},
+            {value:"aant_man", description:"Aantal mannen"},
+            {value:"opp_land", description:"Oppervlakte land"},
+            {value:"p_gehuwd", description:"Percentage gehuwd"},
+            {value:"p_hh_m_k", description:""},
+            {value:"p_hh_z_k", description:""},
+            {value:"p_n_w_al", description:""},
+            {value:"aantal_hh", description:""},
+            {value:"gem_hh_gr", description:""},
+            {value:"opp_water", description:""},
+            {value:"p_ant_aru", description:""},
+            {value:"p_eenp_hh", description:""},
+            {value:"p_marokko", description:""},
+            {value:"p_over_nw", description:""},
+            {value:"p_surinam", description:""},
+            {value:"p_turkije", description:""},
+            {value:"p_west_al", description:""},
+            {value:"aant_vrouw", description:""},
+            {value:"bev_dichth", description:""},
+            {value:"p_00_14_jr", description:""},
+            {value:"p_15_24_jr", description:""},
+            {value:"p_25_44_jr", description:""},
+            {value:"p_45_64_jr", description:""},
+            {value:"p_65_eo_jr", description:""},
+            {value:"p_gescheid", description:""},
+            {value:"p_ongehuwd", description:""},
+            {value:"p_verweduw", description:""}
+            ];
+
+
 WAAG.Menu = function Menu(container) {
   
   console.log("menu constructor innited");
@@ -28,22 +60,20 @@ WAAG.Menu = function Menu(container) {
     
   }
   
-  updateListView = function(dataLayer, subLayer){
+  updateListView = function(activeLayer){
 
-    var id="#listview_"+dataLayer.layer;
+    var id="#listview_cbs";
     var list = d3.select(id);
-       
-      
 
       // (re) createlist     
         list.selectAll("ul")
-          .data(dataLayer.subs)
+          .data(cbsLayers)
           .enter()
           .append("li")
           .attr("id", function(d, i){ return i})
           .attr("data-mini", "true")
           .attr("data-icon", function(d){ 
-                  if(d.value==subLayer){
+                  if(d.value==activeLayer){
                     d.checked=true;
                     return "check";
                   }else{
@@ -59,13 +89,7 @@ WAAG.Menu = function Menu(container) {
                   
                 })
           .on("click", function(d){
-              for(var i=0; i<dataLayers.length; i++){
-                  if(dataLayers[i].label=="cbs"){
-                    dataLayers[i].layers[0].activeLayer=d.value;
-                    geoMap.updateRegionsMap(dataLayers[i].layers[0]);
-                    geoMap.updateBarChart(dataLayers[i].layers[0]);
-                  }
-              }
+              geoMap.updateDataSet(dataLayers[0].layers[0], d.value);
 
     		});
 
@@ -73,15 +97,15 @@ WAAG.Menu = function Menu(container) {
      
     }
     
-    updateListIcons = function(dataLayer, subLayer){
-      var id="#listview_"+dataLayer.layer;
+    updateListIcons = function(activeLayer){
+      var id="#listview_cbs";
       var list = d3.select(id);
       
       //update list       
        list.selectAll("li")
-         .data(dataLayer.subs)
+         .data(cbsLayers)
          .attr("data-icon", function(d){ 
-                if(d.value==subLayer){
+                if(d.value==activeLayer){
                    d.checked=true;
                    $(this).buttonMarkup({ icon: "check" });
                  }else{
@@ -95,13 +119,9 @@ WAAG.Menu = function Menu(container) {
   	d3.selectAll("#selector").on("change", function() {
   	  console.log("on change selector name ="+this.name);
   	  if(this.name=="colorBrewer"){
-  	    for(var i=0; i<dataLayers.length; i++){
-    	      for(var j=0; j<dataLayers[i].layers.length; j++){
-    	        var id=dataLayers[i].layers[j].layer;
-    	        d3.selectAll("#"+id).attr("class", this.value);
-    	        d3.selectAll("#barChart").attr("class", this.value);
-    	      }
-    	  }
+  	    d3.selectAll("#cbs").attr("class", this.value);
+        d3.selectAll("#barChart").attr("class", this.value);
+        d3.selectAll("#legenda").attr("class", this.value);
   	    
   	  }
 
@@ -117,64 +137,16 @@ WAAG.Menu = function Menu(container) {
       }
       //console.log("on change input check ="+this.checked);
       
-      if(this.name=="scaling_cbs"){
-        for(var i=0; i<dataLayers.length; i++){
-    	      for(var j=0; j<dataLayers[i].layers.length; j++){
-    	        if(dataLayers[i].layers[j].layer=="cbs"){
-    	          dataLayers[i].layers[j].properties.geoscaling=this.checked;
-    	          geoMap.updateRegionsMap( dataLayers[i].layers[j]);
-    	        }
-    	      }
-    	  }
+      if(this.name=="geoScaling"){
+        //dataLayers[i].layers[j].properties.geoscaling=this.checked;
+        //geoMap.updateRegionsMap( dataLayers[i].layers[j]);
         
-      } else if(this.name=="divv_taxi"){
-          
-          for(var i=0; i<dataLayers.length; i++){
-      	      for(var j=0; j<dataLayers[i].layers.length; j++){
-      	        if(dataLayers[i].layers[j].layer=="divv_taxi"){
-      	          var activeLayer=dataLayers[i].layers[j].activeLayer;
-              	  var data=dataLayers[i].layers[j].data;
-
-                  data.forEach(function(d){
-                    d.subData[activeLayer]=Math.round(Math.random()*15);     
-                    
-                  });
-      	          geoMap.updatePointsMap( dataLayers[i].layers[j]);
-    	          
-      	        }
-      	      }
-      	  }
-  
-        }
+        
+      }
 
         console.log("checkbox "+this.name);
     });
     
-    $("#flip").change(function(){
-            var slider_value = $(this).val();
-            console.log(this.title);
-            for(var i=0; i<dataLayers.length; i++){
-        	      for(var j=0; j<dataLayers[i].layers.length; j++){
-        	        if(dataLayers[i].layers[j].layer==this.name){
-        	          dataLayers[i].layers[j].properties.active=$(this).val();
-                    
-        	          if(slider_value=="on"){
-        	            dataLayers[i].layers[j].data=dataLayers[i].layers[j].dataCached;
-        	          }else{
-        	            dataLayers[i].layers[j].data=[];
-        	          }
-        	          
-        	          if(this.title=="customMap"){
-        	            geoMap.updateCustomLabelsMap( dataLayers[i].layers[j]);
-        	          }else if(this.title=="pointMap"){
-        	            geoMap.updatePointsMap( dataLayers[i].layers[j]);
-      	            }
-                    
-        	        }
-        	      }
-        	  }
-
-        })
 
   this.init=init;
   this.createMenuItems=createMenuItems;

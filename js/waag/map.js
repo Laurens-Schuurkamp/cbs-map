@@ -10,8 +10,13 @@ WAAG.GeoMap = function GeoMap(container) {
 	var centered, zoom;
 	var nodeTextCloud;
 	var defs, filter, feMerge;
-	
+	var rangeCB=9; //range colorbrewer
 	var mapOffset=0.75;
+	var tTime=500;
+	var geoScaling=false;
+	
+	var activeLayer="bev_dichth";
+	var activeDataLayer;
 	
 	console.log("map constructor innited");
 
@@ -65,6 +70,7 @@ WAAG.GeoMap = function GeoMap(container) {
 		    
 		map = svg.append("g")
 		   .attr("id", "map");
+		   
 	
 	// set dropshadow filters	   
    defs = map.append("defs");
@@ -92,6 +98,15 @@ WAAG.GeoMap = function GeoMap(container) {
     // layerd geo maps
 		regionMap=map.append("g")
 		   .attr("id", "regionMap");
+		   
+		regionMap.append("g")
+		  .attr("id", "main_map")
+		  .attr("class", "Oranges"); //colorBrewer   
+		
+	  regionMap.append("g")
+		  .attr("id", "cbs")
+		  .attr("class", "Oranges"); //colorBrewer
+				   
    		   
    	lineMap=map.append("g")
 		   .attr("id", "lineMap");   
@@ -104,14 +119,20 @@ WAAG.GeoMap = function GeoMap(container) {
    		  
    	barChart=svg.append("g")
    		  .attr("id", "barChartMain");
+        
+    barChart.append("g")
+		  .attr("id", "barChart")
+		  .attr("class", "Oranges"); //colorBrewer   
+		 
+		barChart.append("g")
+		  .attr("id", "legenda")
+		  .attr("class", "Oranges"); //colorBrewer	  
 
      //Import the plane
      d3.xml("svg/text_cloud.svg", "image/svg+xml", function(xml) {  
        nodeTextCloud = document.importNode(xml.documentElement, true);
         
      });
-     
-
 
 		repository.initRepository();
 
@@ -119,10 +140,11 @@ WAAG.GeoMap = function GeoMap(container) {
 
 	preProcesData = function(dataLayer){
     
-    console.log("dataLayer ="+dataLayer.layer);
+    console.log("preproces dataLayer ="+dataLayer.layer);
+    dataLayer.data.sort(function(a, b) { return d3.ascending(a.cdk_id, b.cdk_id)});
     // rewrite results to geojson
       dataLayer.data.forEach(function(d){
-         // redefine data structure for d3.geom
+        // redefine data structure for d3.geom
         if(dataLayer.geom){
          
         	d.type="Feature";
@@ -138,226 +160,257 @@ WAAG.GeoMap = function GeoMap(container) {
         }
 
     	});
-    	
-    dataLayer.dataCached=dataLayer.data;	
-	  
-    createVisualisation(dataLayer);
+
+    	// set legenda object data
+      dataLayer.legenda={};
+    	for (var i=0; i<rangeCB; i++){ 	    
+    	    dataLayer.legenda["q"+i]=0;   
+    	}	
+    
+    
+	  if(dataLayer.layer=="main_map"){
+	    createMainMap(dataLayer);
+	  }else{
+	    updateDataSet(dataLayer, activeLayer);
+	    console.log("updating data set "+dataLayer.cdk_id);  
+	  }
+    
 
   }
 
-  createVisualisation = function (dataLayer){
+  createMainMap = function (dataLayer){
     // set d3 visualisations
-    if(dataLayer.layer=="main_geo_map"){
+    
+      var colorFill="#f8ffff";
+      
+      var vis=d3.select("#"+dataLayer.layer);
+      
       console.log("adding main map");
-      regionMap.append("g")
-    		  .attr("id", dataLayer.layer)
-    			.selectAll('path')
+      vis.selectAll("path")
     			.data(dataLayer.data)
     			.enter().append("path")
-    			  .attr("id", function(d, i){ return d.cdk_id;})
+    			  .attr("id", function(d, i){return d.cdk_id;})
     			  .attr("d", path)
-    			  .style("fill", "none")
-    			  .style("stroke-width", 0.25+"px")
-    			  
+    			  .style("fill", colorFill)
+    			  .style("stroke", "#333333")
+    			  .style("stroke-width", 0.01+"px")
+    			  .on("mouseover", function(d){ 
+      				d3.select(this).style("fill", "#cccccc" );
+      				d3.select(this).style("stroke-width", 0.25+"px" );
+      				var tipsy = $(this).tipsy({ 
+      						gravity: 'w', 
+      						html: true,
+      						trigger: 'hover', 
+      				        title: function() {
+      				          var string=d.name;
+      				          return string; 
+      				        }
+      					});
+      					$(this).trigger("mouseover");
+
+      			})
+      			.on("mouseout", function(d){
+      			  d3.select(this).style("fill", colorFill );
+      			  d3.select(this).style("stroke-width", 0.1+"px" );
+      			})
+    			  .on("click", function(d){
+    			    repository.getCbsData(d.cdk_id);
+    			        			    
+      			})
+      	
+        var initMenu = menu.createMenuItems(dataLayer);
+        menu.updateListView(dataLayer);		
     		console.log("main map innited");
-    		return;
-      
-      }else	if(dataLayer.layer==="cbs"){
-  		  console.log("setting menu");
-        var initted =menu.createMenuItems(dataLayer);
+    		arrangeZindex();
 
-      	regionMap.append("g")
-    		  .attr("id", dataLayer.layer)
-    		  .attr("class", "Oranges"); //colorBrewer
-        
-        dataLayer.activeLayer="aant_inw";
-        menu.updateListView(dataLayer); 
-        
-        barChart.append("g")
-    		  .attr("id", "barChart")
-    		  .attr("class", "Oranges"); //colorBrewer      
-  		  updateBarChart(dataLayer);
-  		}
-  
-    if(dataLayer.properties.active){
-      if(dataLayer.geom=="regions"){
-        updateRegionsMap(dataLayer);
-      }
+      repository.getCbsData("admr.nl.amsterdam");
       
-    }
-
 
   };
-
-	updateRegionsMap = function (dataLayer){
-	 var activeLayer=dataLayer.activeLayer;
-	 var data=dataLayer.data;
-	   
-	  data.forEach(function(d){
+  
+  var max, colorScale, quantizeBrewer, scalingGeoGeo;
+  updateDataSet = function (dataLayer, cbsLayer){
+    
+    activeLayer=cbsLayer;
+  	var data=dataLayer.data;
+    
+    data.forEach(function(d){
 	    d.subData[activeLayer]=parseFloat(d.subData[activeLayer]);     
       if(d.subData[activeLayer]<0 || isNaN(d.subData[activeLayer]) ){
           d.subData[activeLayer]=0;
       };
     });
 
-	  var max =  d3.max(data, function(d) { return d.subData[activeLayer]; });
-	  var colorScale = d3.scale.linear().domain([0,max]).range(['white', 'orange']);
-	  var quantizeBrewer = d3.scale.quantile().domain([0, max]).range(d3.range(9));
-    var scalingGeo = d3.scale.linear().domain([0, max]).range(d3.range(max));
+    max =  d3.max(data, function(d) { return d.subData[activeLayer]; });
+	  colorScale = d3.scale.linear().domain([0,max]).range(['white', 'orange']);
+    quantizeBrewer = d3.scale.quantile().domain([0, max]).range(d3.range(rangeCB));
+    scalingGeo = d3.scale.linear().domain([0, max]).range(d3.range(max));
 
-    menu.updateListIcons(dataLayer, activeLayer);
-  	  	
-  	var vis=d3.select("#"+dataLayer.layer);
-  	
-  	// update selections
-  	vis.selectAll("path")
-  			.data(data)
-  			//.style("fill", function(d){return colorScale(d.subData[activeLayer]);}) 
-  			.attr("class", function(d) { return "q" + quantizeBrewer([d.subData[activeLayer]]) + "-9"; }) //colorBrewer
-          .transition(500)
-            .attr("transform", function(d) {
-                    var x = d.centroid[0];
-                    var y = d.centroid[1];
-                    //d.bounds = path.bounds(d);
-                    var s;         
-                    if(dataLayer.properties.geoscaling==false){
-                      s=1;
-                    }else{
-                      s=scalingGeo([d.subData[activeLayer]]);
-                    }    
-                    return "translate(" + x + "," + y + ")"
-                        + "scale(" + s + ")"
-                        + "translate(" + -x + "," + -y + ")";
-              })
+    updateRegionsMap(dataLayer);
+    updateBarChart(dataLayer);
+    
+  }
 
-		vis.selectAll("path")
-  			.data(data)
-        .enter().append("path")
-  			  .attr("id", function(d, i){return d.cdk_id})
-  			  .attr("d", path)
-  			 .attr("class", function(d) { return "q" + quantizeBrewer([d.subData[activeLayer]]) + "-9"; }) //colorBrewer
-  			 //.style("fill", function(d) { return colorScale(d.subData[activeLayer])}) //linear Scale
-  			  .style("fill-opacity", 0.9000)
-  			  .style("stroke-width", 0.1+"px")
-          .attr("transform", function(d) {
-                var x = d.centroid[0];
-                var y = d.centroid[1];
-                //d.bounds = path.bounds(d);         
-                var s;         
-                if(dataLayer.properties.geoscaling==false){
-                  s=1;
-                }else{
-                  s=scalingGeo([d.subData[activeLayer]]);
-                  console.log("s ="+s)
-                }
-                return "translate(" + x + "," + y + ")"
-                    + "scale(" + s + ")"
-                    + "translate(" + -x + "," + -y + ")";
-            })
-          .on("mouseover", function(d){ 
-    				d.className=$(this).attr("class");
-    				d3.select(this).style("stroke-width", 0.5+"px" );
-    				var tipsy = $(this).tipsy({ 
-    						gravity: 'w', 
-    						html: true,
-    						trigger: 'hover', 
-    				        title: function() {
-    				          var string=d.name+"<br> value: "+d.subData[activeLayer];
-    				          return string; 
-    				        }
-    					});
-    					$(this).trigger("mouseover");
-
-    			})
-    			.on("mouseout", function(d){
-    			  d3.select(this).style("stroke-width", 0.1+"px" );
-    			})
-
-	};
+   updateRegionsMap = function (dataLayer){
+      
+   var data=dataLayer.data;
+    
+    menu.updateListIcons(activeLayer);
+         
+    var visCBS=d3.select("#"+dataLayer.layer);
+    var vis=visCBS.selectAll("path").data(data, function(d, i){return d.cdk_id})
+     
+    vis.enter().append("path")
+           .attr("id", function(d, i){return d.cdk_id})
+           .attr("d", path)
+           .attr("class", function(d) { return "q" + quantizeBrewer([d.subData[activeLayer]]) + "-9"; }) //colorBrewer
+           .style("stroke-width", 0.1+"px")
+           .style("opacity", 1)
+            .on("mouseover", function(d){ 
+             d.className=$(this).attr("class");
+             d3.select(this).style("stroke-width", 0.5+"px" );
+             var tipsy = $(this).tipsy({ 
+                 gravity: 'w', 
+                 html: true,
+                 trigger: 'hover', 
+                     title: function() {
+                       var string=d.name+"<br> value: "+d.subData[activeLayer];
+                       return string; 
+                     }
+               });
+               $(this).trigger("mouseover");
+  
+           })
+           .on("mouseout", function(d){
+             d3.select(this).style("stroke-width", 0.1+"px" );
+           })
+           
+      vis.transition()
+          .duration(tTime)
+          .style("opacity", 1 );
+           
+       vis.exit().transition()
+           .duration(tTime)
+          .style("opacity", 0 )
+          .remove();   
+        
+  };
 	
+	
+	var mTop=40, mBottom=20, mLeft=5, mRight=40, barWidth=240, legendaWidth=5;
 	function updateBarChart(dataLayer){
-	  var activeLayer=dataLayer.activeLayer;
+	  
   	var data=dataLayer.data;
   	
-  	data.forEach(function(d){
-	    d.subData[activeLayer]=parseFloat(d.subData[activeLayer]);     
-      if(d.subData[activeLayer]<0 || isNaN(d.subData[activeLayer]) ){
-          d.subData[activeLayer]=0;
-      };
-    });
-    
-    data.sort(function(a, b) { return d3.ascending(a.subData[activeLayer], b.subData[activeLayer])});
-    
-    var max =  d3.max(data, function(d) { return d.subData[activeLayer]; });
-    var colorScale = d3.scale.linear().domain([0,max]).range(['white', 'orange']);
-  	var scaling = d3.scale.linear().domain([0, max]).range(d3.range(max));
-    var quantizeBrewer = d3.scale.quantile().domain([0, max]).range(d3.range(9));
+  	//reset leganda values
+    for(var i in dataLayer.legenda) {
+       dataLayer.legenda[i]=0;
+    };
+
   	
-  	var vis=d3.select("#barChart");
-  	var maxWith=240;
-  	var barHeight=window.innerHeight/data.length;
+  	
+  	var visHeigth = ( window.innerHeight - mTop - mBottom );
+  	var yPadding= visHeigth /data.length;
+  	var barHeight= visHeigth /data.length;
+  	if(barHeight>1)barHeight=1;
+  	
+  	var barsX=mLeft+legendaWidth;
   
-     vis.selectAll("rect")
-        .data(data)
-        .transition(100)
-        .attr("width", 0)
-
-     vis.selectAll("rect")
-        .data(data)
-        .attr("class", function(d) { return "q" + quantizeBrewer([d.subData[activeLayer]]) + "-9"; }) //colorBrewer
-        .transition(500)
-        .attr("width", function(d){var s=scaling([d.subData[activeLayer]]); return s*maxWith})
-        
-        
-        //.style("fill", function(d) { return colorScale(d.subData[activeLayer])}) //linear Scale   
-
-    vis.selectAll("rect")
-       .data(data)
-       .enter().append("rect")
+    var visBars=d3.select("#barChart");
+    var vis=visBars.selectAll("rect").data(data, function(d, i){return d.cdk_id})
+    
+    vis.enter().append("rect")
        .attr("id", function(d, i){return d.cdk_id})
-       .attr("x", 0)
-       .attr("y", function(d, i){return (i*barHeight)})
-       .attr("width", function(d){var s=scaling([d.subData[activeLayer]]); return s*maxWith})
-       .attr("height", 0.5)
-       .attr("class", function(d) { return "q" + quantizeBrewer([d.subData[activeLayer]]) + "-9"; }) //colorBrewer
-       //.style("fill", function(d) { return colorScale(d.subData[activeLayer])}) //linear Scale
+       .attr("x", barsX+10)
+       .attr("y", function(d, i){return (mTop+(i*yPadding) )})
+       .attr("width", 0)
+       .attr("height", barHeight)
+       .attr("class", function(d) { 
+          var q=quantizeBrewer([d.subData[activeLayer]]);
+          dataLayer.legenda["q"+q]++;
+          return "q" + q + "-9"; 
+        }) //colorBrewer
        .on("mouseover", function(d){ 
-
- 				d3.select(this).style("stroke-width", 0.5+"px" );
- 				var tipsy = $(this).tipsy({ 
- 						gravity: 'w', 
- 						html: true,
- 						trigger: 'hover', 
- 				        title: function() {
- 				          var string=d.name+"<br> value: "+d.subData[activeLayer];
- 				          return string; 
- 				        }
- 					});
- 					$(this).trigger("mouseover");
+ 				  d3.select(this).style("stroke-width", 0.5+"px" );
+   				var tipsy = $(this).tipsy({ 
+   						gravity: 'w', 
+   						html: true,
+   						trigger: 'hover', 
+   				        title: function() {
+   				          var string=d.name+"<br> value: "+d.subData[activeLayer];
+   				          return string; 
+   				        }
+   					});
+   					$(this).trigger("mouseover");
 
  			})
  			.on("mouseout", function(d){
- 			  
  			  d3.select(this).style("stroke-width", 0.1+"px" );
- 				
  			})
-       
+ 			
+ 			vis.transition()
+          .duration(tTime)
+          .attr("width", function(d){return scalingGeo([d.subData[activeLayer]])*barWidth})
+           
+       vis.exit().transition()
+          .duration(tTime)
+          .attr("width", 0)
+          .remove();
+
+
+      // legenda
+      var dataLegenda=d3.entries(dataLayer.legenda);
+      var yPrev=0;
+      var visLegenda=d3.select("#legenda");
+      var legenda=visLegenda.selectAll("rect").data(dataLegenda);
+      
+      legenda.enter().append("rect")
+         .attr("x", mLeft)
+         .attr("width", legendaWidth)
+         .attr("heigth", 0)
+         .attr("class", function(d, i) {
+              return "q" + i + "-9"; 
+            }) //colorBrewer
+      
+      legenda.transition()
+          .duration(tTime)
+          .attr("y", function(d, i){
+             var y=mTop+yPrev;
+             yPrev+=d.value*yPadding;
+             return y;
+             })
+           .attr("height", function(d){return d.value*yPadding});
+     
+            
+	}
+		
+	function arrangeZindex(){
+	  var vis;
+	  var vis=d3.select("#cbs");
+  	vis.moveToFront();
+	  
+	  var vis=d3.select("#barChart");
+	  vis.moveToFront();
 	}
 	
-	  d3.selection.prototype.moveToFront = function() {
+	d3.selection.prototype.moveToFront = function() {
       return this.each(function(){
       this.parentNode.appendChild(this);
       });
-    };
+  };
 
 	function zoomed() {
+	    //console.log(d3.event);
       map.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
-    };
+  };
 
   init();
-  this.preProcesData=preProcesData;
   this.updateRegionsMap=updateRegionsMap;
-  this.updateBarChart=updateBarChart;
+  this.preProcesData=preProcesData;
+  this.updateDataSet=updateDataSet;
+  //this.renewMap=renewMap;
+  
+  
   return this;   
 
 };

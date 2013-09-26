@@ -32,7 +32,7 @@
 				
     <div data-role="page">
 	
-			<div data-role="panel" id="menu-panel" class="main_nav" data-display="push"  data-dismissible="true" data-theme="a">
+			<div data-role="panel" id="menu-panel" class="main_nav" data-display="overlay"  data-dismissible="true" data-theme="a" data-position="right" >
 				<div class="nav_profile">
 	      	<div class="nav_name">
 						<div id="menu_container">
@@ -41,9 +41,33 @@
 									  <h4>CBS statistieken</h4>
 								    <ul data-role="listview" data-mini="true" id="listview_cbs"></ul>
 									</div>
-									<input type="checkbox" name="scaling_cbs" id="checkbox_scaling_cbs" class="custom" data-mini="true" />
-									<label for="checkbox_scaling_cbs">geometry scaling</label>
+									<input type="checkbox" name="geoScaling" id="checkbox_geoScaling" class="custom" data-mini="true" />
+									<label for="checkbox_geoScaling">geometry scaling</label>
 									<hr>
+
+									Map Colors
+									<div><select id="selector" name="colorBrewer" data-mini="true">
+					          <optgroup label="Colors" >
+					            <option value="YlGn">YlGn</option>
+					            <option value="YlGnBu">YlGnBu</option>
+					            <option value="GnBu">GnBu</option>
+					            <option value="BuGn">BuGn</option>
+					            <option value="PuBuGn">PuBuGn</option>
+					            <option value="PuBu">PuBu</option>
+					            <option value="BuPu">BuPu</option>
+					            <option value="RdPu">RdPu</option>
+					            <option value="PuRd">PuRd</option>
+					            <option value="OrRd">OrRd</option>
+					            <option value="YlOrRd">YlOrRd</option>
+					            <option value="YlOrBr">YlOrBr</option>
+					            <option value="Purples">Purples</option>
+					            <option value="Blues" >Blues</option>
+					            <option value="Greens">Greens</option>
+					            <option value="Oranges" selected>Oranges</option>
+					            <option value="Reds">Reds</option>
+					            <option value="Greys">Greys</option>
+					          </optgroup>
+					        </select></div>
 								</div>
 						</div>
 	        </div><!--/nav_name-->
@@ -58,33 +82,9 @@
         <div data-role="content">
 						
             <div id="map_container"></div>
-						<div id="footer">
-						        Map Colors
-										<div><select id="selector" name="colorBrewer">
-						          <optgroup label="Colors.">
-						            <option value="YlGn">YlGn</option>
-						            <option value="YlGnBu">YlGnBu</option>
-						            <option value="GnBu">GnBu</option>
-						            <option value="BuGn">BuGn</option>
-						            <option value="PuBuGn">PuBuGn</option>
-						            <option value="PuBu">PuBu</option>
-						            <option value="BuPu">BuPu</option>
-						            <option value="RdPu">RdPu</option>
-						            <option value="PuRd">PuRd</option>
-						            <option value="OrRd">OrRd</option>
-						            <option value="YlOrRd">YlOrRd</option>
-						            <option value="YlOrBr">YlOrBr</option>
-						            <option value="Purples">Purples</option>
-						            <option value="Blues" >Blues</option>
-						            <option value="Greens">Greens</option>
-						            <option value="Oranges" selected>Oranges</option>
-						            <option value="Reds">Reds</option>
-						            <option value="Greys">Greys</option>
-						          </optgroup>
-						        </select>
-										<a href="#menu-panel" style="margin-top:-10px;" data-role="button" data-icon="gear" data-iconpos="notext" data-theme="c" data-inline="true">Gear</a>
-									</div>
-						   </div>
+						<div id="menu_btn">
+								<a href="#menu-panel" style="margin-top:-10px;" data-role="button" data-icon="gear" data-iconpos="notext" data-theme="c" data-inline="true">Gear</a>
+						 </div>
 						
         </div><!-- /content --> 
 

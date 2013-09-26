@@ -3,17 +3,16 @@
 //	The code is not perfect at all, so please feel free to compliment for improvements.
 //	I learn from you, you learn from me, we learn......
 //
-var dataLayers=[];
+
 WAAG.Repository = function Repository() {
 
 var apiUrl="http://api.citysdk.waag.org/";
 var maxEntrys=1000;
 var load_queue=[];
 
-var llAmsterdam={city:"amsterdam", admr:"admr.nl.amsterdam", lat:52.3734, lng:4.8921};
-var llNederland={city:"nederland", admr:"admr.nl.nederland", lat:52.3734, lng:4.8921};
-var llUtrecht={city:"utrecht", admr:"admr.nl.utrecht", lat:52.3734, lng:4.8921};
 var dummyMax=1000;
+var dataLayers=[];
+
   
   console.log("repository constructor innited");
 
@@ -32,69 +31,26 @@ var dummyMax=1000;
     //     }
     //     http://api.smartcitizen.me/v0.0.1/9778c68929309f0244c78730e2a64dd5/220/posts.json
     // return;  
-    
-  	
-  	var cbsLayers=[
-                {value:"opp_tot", description:"Oppervlaktes"},
-                {value:"aant_inw", description:"Aantal inwoners"},
-                {value:"aant_man", description:"Aantal mannen"},
-                {value:"opp_land", description:"Oppervlakte land"},
-                {value:"p_gehuwd", description:"Percentage gehuwd"},
-                {value:"p_hh_m_k", description:""},
-                {value:"p_hh_z_k", description:""},
-                {value:"p_n_w_al", description:""},
-                {value:"aantal_hh", description:""},
-                {value:"gem_hh_gr", description:""},
-                {value:"opp_water", description:""},
-                {value:"p_ant_aru", description:""},
-                {value:"p_eenp_hh", description:""},
-                {value:"p_marokko", description:""},
-                {value:"p_over_nw", description:""},
-                {value:"p_surinam", description:""},
-                {value:"p_turkije", description:""},
-                {value:"p_west_al", description:""},
-                {value:"aant_vrouw", description:""},
-                {value:"bev_dichth", description:""},
-                {value:"p_00_14_jr", description:""},
-                {value:"p_15_24_jr", description:""},
-                {value:"p_25_44_jr", description:""},
-                {value:"p_45_64_jr", description:""},
-                {value:"p_65_eo_jr", description:""},
-                {value:"p_gescheid", description:""},
-                {value:"p_ongehuwd", description:""},
-                {value:"p_verweduw", description:""}
-                ];
-		
+
      var dataLayer={
     			label:"main_geo_map",
     			layers:[
-    				{label:"Amsterdam", subs:[], ll:llAmsterdam, apiCall:llNederland.admr+"/regions?admr::admn_level=3&geom", geom:"regions", layer:"main_geo_map", properties:{active:true, geoscaling:false, static:false, dotSize:0, stroke_width:0.25}},
+    				{cdk_id:"admr.nl.nederland", subs:[], apiCall:"/regions?admr::admn_level=3&geom", geom:"regions", layer:"main_map"}, 
     			]
     		};
-
-  	dataLayers.push(dataLayer);
+    //getApiData(dataLayer.layers[0]); 
+    getLocalData(dataLayer.layers[0]);   
 		
 				
   	dataLayer={
   			label:"cbs",
   			layers:[
-  				{label:"Amsterdam", subs:cbsLayers, ll:llAmsterdam, apiCall:llAmsterdam.admr+"/regions?admr::admn_level=5&layer=cbs&geom", geom:"regions", layer:"cbs", properties:{active:true, geoscaling:false, static:false, dotSize:0, stroke_width:0.25}},
-  				//{label:"Nederland", subs:cbsLayers, ll:llNederland, apiCall:llNederland.admr+"/regions?admr::admn_level=3&layer=cbs&geom", geom:"regions", layer:"cbs", properties:{active:true, geoscaling:false, static:false, dotSize:0, stroke_width:0.25}},
-  				//{label:"utrecht", subs:cbsLayers, ll:llUtrecht, apiCall:llUtrecht.admr+"/regions?admr::admn_level=3&layer=cbs&geom", geom:"regions", layer:"cbs", properties:{active:true, geoscaling:false, static:false, dotSize:0, stroke_width:0.25}},
-
+  				{cdk_id:"admr.nl.amsterdam", subs:[], apiCall:"/regions?admr::admn_level=5&layer=cbs&geom", geom:"regions", layer:"cbs"}, 
   			]
   		};
+      //getApiData(dataLayer.layers[0]);
+      
 
-    dataLayers.push(dataLayer);
-	
-
-   	
-   	for(var i=0; i<dataLayers.length; i++){
-        for(var j=0; j<dataLayers[i].layers.length; j++){
-          getApiData(dataLayers[i].layers[j]);
-        }
-          
-    }
 	
 	  // topomap
   	// d3.json("data/nl_topo_props.json", function(error, results) {
@@ -103,10 +59,14 @@ var dummyMax=1000;
   	//   });
 
   }
+  
+  function getLocalData(dataLayer){
+  		addloadDataQueue("data/cdk_cities_nl.json", 1, dataLayer);	
+  }
 
 
   function getApiData(dataLayer){
-  		addloadDataQueue(apiUrl+dataLayer.apiCall+"&per_page="+maxEntrys+"&page=1", 1, dataLayer);	
+  		addloadDataQueue(apiUrl+dataLayer.cdk_id+dataLayer.apiCall+"&per_page="+maxEntrys+"&page=1", 1, dataLayer);	
   }
 
   function getRegions(url, page, dataLayer){
@@ -175,6 +135,7 @@ var dummyMax=1000;
     console.log("api cal "+url);
 
     d3.json(url, function(json){
+          
       
       if(page==1){
         dataLayer.data=json.results;
@@ -193,14 +154,37 @@ var dummyMax=1000;
         getData(newUrl, nextPage, dataLayer);
       }else{
         console.log("adding "+dataLayer.layer+" -->"+json.results.length)
-        geoMap.preProcesData(dataLayer);
+        if(dataLayer.layer=="cbs"){
+          geoMap.preProcesData(dataLayer);
+        }else{
+          geoMap.preProcesData(dataLayer);
+        }
+        
+        
       }
 
   	});
 
   }
+  
+  getCbsData = function(cdk_id){
+    for(var i=0; i<dataLayers.length; i++){
+      if(dataLayers[i].cdk_id==cdk_id){
+        //geoMap.renewMap(dataLayers[i]);
+        geoMap.preProcesData(dataLayers[i]);
+        return;
+      }  
+    }    
+    var url=apiUrl+cdk_id+"/regions?admr::admn_level=5&layer=cbs&geom&per_page="+maxEntrys+"&page=1";
+    var layer={cdk_id:cdk_id, apiCall:"/regions?admr::admn_level=5&layer=cbs&geom", geom:"regions", layer:"cbs"}
+    dataLayers.push(layer);
+    getApiData(layer);
+
+  }
 
   this.initRepository=initRepository;
+  this.getCbsData=getCbsData;
+  //this.loa=initRepository;
   
   return this;
 
